@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短剧网站</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+        .drama-list {
+            list-style: none;
+            padding: 0;
+        }
+        .drama-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .drama-item:last-child {
+            border-bottom: none;
+        }
+        .drama-item a {
+            display: block;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .drama-item a:hover {
+            text-decoration: underline;
+        }
+        .recommendation {
+            background: #e9f6ff;
+            padding: 15px;
+            border: 1px solid #b3e5fc;
+            margin-bottom: 20px;
+        }
+        .recommendation h2 {
+            margin: 0 0 10px;
+        }
+        .recommendation p {
+            margin: 5px 0;
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="container">
+    <h1>短剧搜索</h1>
+    <div class="recommendation">
+        <h2>推荐剧集</h2>
+        <button @click="fetchRecommendation">刷新推荐</button>
+        <div v-if="recommendation">
+            <a :href="recommendation.url" target="_blank">
+                <h3>{{ recommendation.name }}</h3>
+                <p>剧集编号: {{ recommendation.number }}</p>
+                <p>更新时间: {{ recommendation.addtime }}</p>
+                <p>集数: {{ recommendation.episodes }}</p>
+            </a>
+        </div>
+        <div v-else>
+            <p>暂无推荐短剧</p>
+        </div>
+    </div>
+    <input type="text" v-model="searchQuery" placeholder="输入关键字..." @input="fetchDramas">
+    <ul class="drama-list">
+        <li v-for="drama in dramas" :key="drama.id" class="drama-item">
+            <a :href="drama.url" target="_blank">
+                <h2>{{ drama.name }}</h2>
+                <p>剧集编号: {{ drama.number }}</p>
+                <p>更新时间: {{ drama.addtime }}</p>
+                <p>集数: {{ drama.episodes }}</p>
+            </a>
+        </li>
+    </ul>
+    <p>接口来源: <a href="https://ys.110t.cn">爱看短剧</a></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            const searchQuery = ref('');
+            const dramas = ref([]);
+            const recommendation = ref(null);
+
+            const fetchDramas = async () => {
+                if (searchQuery.value.trim()) {
+                    try {
+                        const response = await axios.get('https://ys.110t.cn/api/ajax.php?act=search&name=' + searchQuery.value);
+                        if (response.data.code === "0") {
+                            dramas.value = response.data.data;
+                        } else {
+                            dramas.value = [];
+                        }
+                    } catch (error) {
+                        console.error('Error fetching dramas:', error);
+                    }
+                } else {
+                    dramas.value = [];
+                }
+            };
+
+            const fetchRecommendation = async () => {
+                try {
+                    const response = await axios.get('https://ys.110t.cn/api/ajax.php?act=recommend');
+                    if (response.data.code === "0") {
+                        recommendation.value = response.data.data;
+                    } else {
+                        recommendation.value = null;
+                    }
+                } catch (error) {
+                    console.error('Error fetching recommendation:', error);
+                }
+            };
+
+            onMounted(() => {
+                fetchDramas();
+                fetchRecommendation();
+            });
+
+            return { searchQuery, dramas, recommendation, fetchRecommendation, fetchDramas };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
