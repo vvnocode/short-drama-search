@@ -99,6 +99,7 @@
     <p>接口来源: <a href="https://ys.110t.cn">爱看短剧</a></p>
 </div>
 
+<!-- 引入 Vue 3 和 axios -->
 <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
@@ -111,19 +112,15 @@
             const recommendation = ref(null);
 
             const fetchDramas = async () => {
-                if (searchQuery.value.trim()) {
-                    try {
-                        const response = await axios.get('https://ys.110t.cn/api/ajax.php?act=search&name=' + searchQuery.value);
-                        if (response.data.code === "0") {
-                            dramas.value = response.data.data;
-                        } else {
-                            dramas.value = [];
-                        }
-                    } catch (error) {
-                        console.error('Error fetching dramas:', error);
+                try {
+                    const response = await axios.get('https://ys.110t.cn/api/ajax.php?act=search&name=' + searchQuery.value);
+                    if (response.data.code === "0") {
+                        dramas.value = response.data.data;
+                    } else {
+                        dramas.value = [];
                     }
-                } else {
-                    dramas.value = [];
+                } catch (error) {
+                    console.error('Error fetching dramas:', error);
                 }
             };
 
@@ -141,7 +138,7 @@
             };
 
             onMounted(() => {
-                fetchDramas();
+                fetchDramas(); // 页面初次加载时查询最新上传的短剧
                 fetchRecommendation();
             });
 
